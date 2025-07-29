@@ -5,6 +5,23 @@ import {imageURL} from '../../constants/constants'
 import MovieModal from '../MovieModal/MovieModal';
 
 function Rowpost(props) {
+    // Favorite movies state
+    const [favorites, setFavorites] = useState(() => {
+      const stored = localStorage.getItem('favorites');
+      return stored ? JSON.parse(stored) : [];
+    });
+
+    // Add/remove favorite
+    const toggleFavorite = (movieObj) => {
+      let updated;
+      if (favorites.some(m => m.id === movieObj.id)) {
+        updated = favorites.filter(m => m.id !== movieObj.id);
+      } else {
+        updated = [...favorites, movieObj];
+      }
+      setFavorites(updated);
+      localStorage.setItem('favorites', JSON.stringify(updated));
+    };
     const [movie, setMovie] = useState([]);
     const [selectedMovie, setSelectedMovie] = useState(null);
     const [hoveredMovieId, setHoveredMovieId] = useState(null);
@@ -55,48 +72,21 @@ function Rowpost(props) {
       container.scrollBy({ left: direction * (cardWidth * 3), behavior: 'smooth' });
     };
 
-    // Check if scrollable (for arrow visibility)
-    const [canScrollLeft, setCanScrollLeft] = useState(false);
-    const [canScrollRight, setCanScrollRight] = useState(false);
-    React.useEffect(() => {
-      const container = postersRef.current;
-      if (!container) return;
-      const updateScroll = () => {
-        setCanScrollLeft(container.scrollLeft > 0);
-        setCanScrollRight(container.scrollLeft + container.offsetWidth < container.scrollWidth - 1);
-      };
-      updateScroll();
-      container.addEventListener('scroll', updateScroll);
-      window.addEventListener('resize', updateScroll);
-      return () => {
-        container.removeEventListener('scroll', updateScroll);
-        window.removeEventListener('resize', updateScroll);
-      };
-    }, [movie]);
+    // ...existing code...
 
     return (
       <div className='Row' style={{ position: 'relative' }}>
         <h2>{props.title}</h2>
-        {canScrollLeft && (
-          <button
-            style={{
-              position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 10,
-              background: 'rgba(20,20,20,0.7)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', fontSize: 22, boxShadow: '0 2px 8px #000',
-            }}
-            aria-label="Scroll left"
-            onClick={() => scrollByCards(-1)}
-          >&#8592;</button>
-        )}
-        {canScrollRight && (
-          <button
-            style={{
-              position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 10,
-              background: 'rgba(20,20,20,0.7)', color: '#fff', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', fontSize: 22, boxShadow: '0 2px 8px #000',
-            }}
-            aria-label="Scroll right"
-            onClick={() => scrollByCards(1)}
-          >&#8594;</button>
-        )}
+        <button
+          style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: '#222', color: '#fff', border: 'none', borderRadius: '50%', width: 36, height: 36, fontSize: 24, cursor: 'pointer', boxShadow: '0 2px 8px #000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          aria-label="Scroll left"
+          onClick={() => scrollByCards(-1)}
+        >&lt;</button>
+        <button
+          style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: '#222', color: '#fff', border: 'none', borderRadius: '50%', width: 36, height: 36, fontSize: 24, cursor: 'pointer', boxShadow: '0 2px 8px #000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          aria-label="Scroll right"
+          onClick={() => scrollByCards(1)}
+        >&gt;</button>
         <div
           className="posters enhanced-scroll"
           ref={postersRef}
@@ -113,6 +103,7 @@ function Rowpost(props) {
         >
           {movie.map((obj) => {
             const isSelected = hoveredMovieId === obj.id || selectedMovie?.id === obj.id;
+            const isFavorite = favorites.some(m => m.id === obj.id);
             return (
               <div
                 key={obj.id}
@@ -137,7 +128,6 @@ function Rowpost(props) {
                 }}
                 onMouseEnter={() => handleMouseEnter(obj.id)}
                 onMouseLeave={handleMouseLeave}
-                onClick={() => handlePosterClick(obj)}
               >
                 <img
                   src={imageURL + (obj.backdrop_path || obj.poster_path)}
@@ -155,6 +145,7 @@ function Rowpost(props) {
                     filter: 'blur(8px)',
                   }}
                   onLoad={e => { e.target.style.filter = 'none'; }}
+                  onClick={() => handlePosterClick(obj)}
                 />
                 <div style={{
                   color: '#fff',
@@ -168,6 +159,13 @@ function Rowpost(props) {
                   textOverflow: 'ellipsis',
                   width: '100%',
                 }}>{obj.title || obj.name}</div>
+                <button
+                  style={{
+                    position: 'absolute', top: 8, right: 8, background: isFavorite ? '#e50914' : '#222', color: '#fff', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontSize: 18, boxShadow: '0 2px 8px #000',
+                  }}
+                  title={isFavorite ? 'Unmark Favorite' : 'Mark as Favorite'}
+                  onClick={e => { e.stopPropagation(); toggleFavorite(obj); }}
+                >{isFavorite ? '★' : '☆'}</button>
               </div>
             );
           })}
