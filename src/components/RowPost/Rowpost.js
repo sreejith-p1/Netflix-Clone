@@ -142,6 +142,7 @@ function Rowpost(props) {
                 <img
                   src={imageURL + (obj.backdrop_path || obj.poster_path)}
                   alt={obj.title || obj.name}
+                  loading="lazy"
                   style={{
                     width: '100%',
                     height: props.isSmall ? '120px' : '180px',
@@ -150,7 +151,10 @@ function Rowpost(props) {
                     marginBottom: '8px',
                     boxShadow: isSelected ? '0 2px 12px #e50914' : 'none',
                     transition: 'box-shadow 0.18s',
+                    background: '#222',
+                    filter: 'blur(8px)',
                   }}
+                  onLoad={e => { e.target.style.filter = 'none'; }}
                 />
                 <div style={{
                   color: '#fff',
