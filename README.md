@@ -64,6 +64,7 @@ Netflix Clone
 ├── src/
 │   ├── components/
 │   │   ├── Banner/
+│   │   ├── MovieModal/
 │   │   ├── NavBar/
 │   │   └── RowPost/
 │   ├── constants/
